@@ -126,6 +126,8 @@ final class DateTimeNormalizer implements NormalizerInterface, DenormalizerInter
                 if (false !== $object = $type::createFromFormat($defaultDateTimeFormat, $data, $timezone)) {
                     return $object;
                 }
+
+                \trigger_deprecation('symfony/serializer', '7.3', \sprintf('NotNormalizableValueException will be thrown when date could not be parsed using the default format "%s".', $defaultDateTimeFormat));
             }
 
             return new $type($data, $timezone);
