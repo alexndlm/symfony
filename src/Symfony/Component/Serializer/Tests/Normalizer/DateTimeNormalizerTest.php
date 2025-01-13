@@ -261,7 +261,6 @@ class DateTimeNormalizerTest extends TestCase
         $this->expectDeprecation('Since symfony/serializer 7.3: A "Symfony\Component\Serializer\Exception\NotNormalizableValueException" will be thrown when a date could not be parsed using the default format "Y-m-d\TH:i:sP".');
 
         $this->assertEquals(new DateTimeChild('2016/01/01', new \DateTimeZone('UTC')), $this->normalizer->denormalize('  2016-01-01T00:00:00+00:00  ', DateTimeChild::class));
-
     }
 
     public function testDenormalizeUsingTimezonePassedInConstructor()
