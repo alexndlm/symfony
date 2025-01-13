@@ -127,7 +127,7 @@ final class DateTimeNormalizer implements NormalizerInterface, DenormalizerInter
                     return $object;
                 }
 
-                trigger_deprecation('symfony/serializer', '7.3', \sprintf('NotNormalizableValueException will be thrown when date could not be parsed using the default format "%s".', $defaultDateTimeFormat));
+                trigger_deprecation('symfony/serializer', '7.3', \sprintf('A "%s" will be thrown when a date could not be parsed using the default format "%s".', NotNormalizableValueException::class, $defaultDateTimeFormat));
             }
 
             return new $type($data, $timezone);
