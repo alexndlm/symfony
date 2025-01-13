@@ -41,6 +41,7 @@ Serializer
 ----------
 
  * Deprecate the `CompiledClassMetadataFactory` and `CompiledClassMetadataCacheWarmer` classes
+ * Deprecate datetime constructor as a fallback, in version 8.0 a `Symfony\Component\Serializer\Exception\NotNormalizableValueException` will be thrown when a date could not be parsed using the default format.
 
 VarDumper
 ---------

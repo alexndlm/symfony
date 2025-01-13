@@ -12,6 +12,7 @@
 namespace Symfony\Component\Serializer\Tests\Normalizer;
 
 use PHPUnit\Framework\TestCase;
+use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 use Symfony\Component\Serializer\Exception\InvalidArgumentException;
 use Symfony\Component\Serializer\Exception\UnexpectedValueException;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
@@ -21,6 +22,8 @@ use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
  */
 class DateTimeNormalizerTest extends TestCase
 {
+    use ExpectDeprecationTrait;
+
     private DateTimeNormalizer $normalizer;
 
     protected function setUp(): void
@@ -242,13 +245,23 @@ class DateTimeNormalizerTest extends TestCase
         $this->assertEquals(new \DateTimeImmutable('2016/01/01', new \DateTimeZone('UTC')), $this->normalizer->denormalize('2016-01-01T00:00:00+00:00', \DateTimeInterface::class));
         $this->assertEquals(new \DateTimeImmutable('2016/01/01', new \DateTimeZone('UTC')), $this->normalizer->denormalize('2016-01-01T00:00:00+00:00', \DateTimeImmutable::class));
         $this->assertEquals(new \DateTime('2016/01/01', new \DateTimeZone('UTC')), $this->normalizer->denormalize('2016-01-01T00:00:00+00:00', \DateTime::class));
-        $this->assertEquals(new \DateTime('2016/01/01', new \DateTimeZone('UTC')), $this->normalizer->denormalize('  2016-01-01T00:00:00+00:00  ', \DateTime::class));
         $this->assertEquals(new DateTimeImmutableChild('2016/01/01', new \DateTimeZone('UTC')), $this->normalizer->denormalize('2016-01-01T00:00:00+00:00', DateTimeImmutableChild::class));
         $this->assertEquals(new DateTimeImmutableChild('2016/01/01', new \DateTimeZone('UTC')), $this->normalizer->denormalize('2016-01-01T00:00:00+00:00', DateTimeImmutableChild::class));
         $this->assertEquals(new DateTimeChild('2016/01/01', new \DateTimeZone('UTC')), $this->normalizer->denormalize('2016-01-01T00:00:00+00:00', DateTimeChild::class));
-        $this->assertEquals(new DateTimeChild('2016/01/01', new \DateTimeZone('UTC')), $this->normalizer->denormalize('  2016-01-01T00:00:00+00:00  ', DateTimeChild::class));
         $this->assertEquals(new \DateTimeImmutable('2023-05-06T17:35:34.000000+0000', new \DateTimeZone('UTC')), $this->normalizer->denormalize(1683394534, \DateTimeImmutable::class, null, [DateTimeNormalizer::FORMAT_KEY => 'U']));
         $this->assertEquals(new \DateTimeImmutable('2023-05-06T17:35:34.123400+0000', new \DateTimeZone('UTC')), $this->normalizer->denormalize(1683394534.1234, \DateTimeImmutable::class, null, [DateTimeNormalizer::FORMAT_KEY => 'U.u']));
+    }
+
+    /**
+     * @group legacy
+     */
+    public function testDenormalizeAndShowDeprecation()
+    {
+        $this->assertEquals(new \DateTime('2016/01/01', new \DateTimeZone('UTC')), $this->normalizer->denormalize('  2016-01-01T00:00:00+00:00  ', \DateTime::class));
+        $this->expectDeprecation('Since symfony/serializer 7.3: A "Symfony\Component\Serializer\Exception\NotNormalizableValueException" will be thrown when a date could not be parsed using the default format "Y-m-d\TH:i:sP".');
+
+        $this->assertEquals(new DateTimeChild('2016/01/01', new \DateTimeZone('UTC')), $this->normalizer->denormalize('  2016-01-01T00:00:00+00:00  ', DateTimeChild::class));
+
     }
 
     public function testDenormalizeUsingTimezonePassedInConstructor()
@@ -284,15 +297,17 @@ class DateTimeNormalizerTest extends TestCase
 
     public static function denormalizeUsingTimezonePassedInContextProvider()
     {
-        yield 'with timezone' => [
+        yield 'with timezone and format with timezone information' => [
             '2016/12/01 17:35:00',
             new \DateTimeImmutable('2016/12/01 17:35:00', new \DateTimeZone('Japan')),
             new \DateTimeZone('Japan'),
+            'Y/m/d H:i:s',
         ];
-        yield 'with timezone as string' => [
+        yield 'with timezone as string and format without timezone information' => [
             '2016/12/01 17:35:00',
             new \DateTimeImmutable('2016/12/01 17:35:00', new \DateTimeZone('Japan')),
             'Japan',
+            'Y/m/d H:i:s',
         ];
         yield 'with format without timezone information' => [
             '2016.12.01 17:35:00',
@@ -308,10 +323,15 @@ class DateTimeNormalizerTest extends TestCase
         ];
     }
 
+    /**
+     * @group legacy
+     */
     public function testDenormalizeInvalidDataThrowsException()
     {
         $this->expectException(UnexpectedValueException::class);
         $this->normalizer->denormalize('invalid date', \DateTimeInterface::class);
+
+        $this->expectDeprecation('Since symfony/serializer 7.3: A "Symfony\Component\Serializer\Exception\NotNormalizableValueException" will be thrown when a date could not be parsed using the default format "Y-m-d\TH:i:sP".');
     }
 
     public function testDenormalizeWrongTypeThrowsException()
@@ -376,6 +396,9 @@ class DateTimeNormalizerTest extends TestCase
         $this->assertSame('01/10/2018', $denormalizedDate->format($format));
     }
 
+    /**
+     * @group legacy
+     */
     public function testDenormalizeDateTimeStringWithDefaultContextAllowsErrorFormat()
     {
         $format = 'd/m/Y'; // the default format
@@ -385,6 +408,7 @@ class DateTimeNormalizerTest extends TestCase
         $denormalizedDate = $normalizer->denormalize($string, \DateTimeInterface::class);
 
         $this->assertSame('2020-01-01', $denormalizedDate->format('Y-m-d'));
+        $this->expectDeprecation('');
     }
 
     public function testDenormalizeFormatMismatchThrowsException()
